@@ -28,7 +28,7 @@ func main() {
 	println("Duration (ms):", *duration/1000000)
 	println("Debug Mode:", *debug)
 
-	cli := client.NewUDPClient(*serverAddr,
+	cli := client.NewUDPTestSuite(*serverAddr,
 		option.WithConcurrency(*concurrency),
 		option.WithPacketSize(*packetSize),
 		option.WithReadTimeout(*readTimeout),
