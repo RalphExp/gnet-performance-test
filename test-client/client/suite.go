@@ -98,16 +98,19 @@ func (suite *UDPTestSuite) Start() {
 				for {
 					select {
 					case <-ctx.Done():
+						c := time.After(time.Second * 3)
 						for {
 							select {
-							case <-time.After(time.Second):
+							case <-c:
+								conn.Close()
 								return
 							default:
-								conn.SetReadDeadline(time.Now().Add(suite.options.ReadTimeout * time.Millisecond))
+								conn.SetReadDeadline(time.Now().Add(suite.options.ReadTimeout))
 								_, err := conn.Read(rbuf)
 								if err == nil {
+									// fmt.Printf("Goroutine[%d] recv %s\n", idx, string(rbuf))
 									suite.rx.Add(1)
-								} else {
+								} else if !strings.Contains(err.Error(), "i/o timeout") {
 									suite.rxError.Add(1)
 									if suite.options.Debug {
 										fmt.Printf("Goroutine[%d] recv error: %s\n", idx, err.Error())
@@ -116,11 +119,11 @@ func (suite *UDPTestSuite) Start() {
 							}
 						}
 					default:
-						conn.SetReadDeadline(time.Now().Add(suite.options.ReadTimeout * time.Millisecond))
+						conn.SetReadDeadline(time.Now().Add(suite.options.ReadTimeout))
 						_, err := conn.Read(rbuf)
 						if err == nil {
 							suite.rx.Add(1)
-						} else {
+						} else if !strings.Contains(err.Error(), "i/o timeout") {
 							suite.rxError.Add(1)
 							if suite.options.Debug {
 								fmt.Printf("Goroutine[%d] recv error: %s\n", idx, err.Error())
@@ -146,7 +149,7 @@ func (suite *UDPTestSuite) Start() {
 						_, err := conn.Write(wbuf)
 						if err == nil {
 							suite.tx.Add(1)
-							time.Sleep(time.Microsecond * 10)
+							time.Sleep(time.Millisecond)
 						} else {
 							suite.txError.Add(1)
 							if suite.options.Debug {
