@@ -48,5 +48,3 @@ func WithDebug(debug bool) Option {
 		opts.Debug = debug
 	}
 }
-
-// 	}

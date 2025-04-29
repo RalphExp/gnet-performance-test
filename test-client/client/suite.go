@@ -98,26 +98,27 @@ func (suite *UDPTestSuite) Start() {
 				for {
 					select {
 					case <-ctx.Done():
-						c := time.After(time.Second * 3)
-						for {
-							select {
-							case <-c:
-								conn.Close()
-								return
-							default:
-								conn.SetReadDeadline(time.Now().Add(suite.options.ReadTimeout))
-								_, err := conn.Read(rbuf)
-								if err == nil {
-									// fmt.Printf("Goroutine[%d] recv %s\n", idx, string(rbuf))
-									suite.rx.Add(1)
-								} else if !strings.Contains(err.Error(), "i/o timeout") {
-									suite.rxError.Add(1)
-									if suite.options.Debug {
-										fmt.Printf("Goroutine[%d] recv error: %s\n", idx, err.Error())
-									}
-								}
-							}
-						}
+						return
+						// c := time.After(time.Second * 3)
+						// for {
+						// 	select {
+						// 	case <-c:
+						// 		conn.Close()
+						// 		return
+						// 	default:
+						// 		conn.SetReadDeadline(time.Now().Add(suite.options.ReadTimeout))
+						// 		_, err := conn.Read(rbuf)
+						// 		if err == nil {
+						// 			// fmt.Printf("Goroutine[%d] recv %s\n", idx, string(rbuf))
+						// 			suite.rx.Add(1)
+						// 		} else if !strings.Contains(err.Error(), "i/o timeout") {
+						// 			suite.rxError.Add(1)
+						// 			if suite.options.Debug {
+						// 				fmt.Printf("Goroutine[%d] recv error: %s\n", idx, err.Error())
+						// 			}
+						// 		}
+						// 	}
+						// }
 					default:
 						conn.SetReadDeadline(time.Now().Add(suite.options.ReadTimeout))
 						_, err := conn.Read(rbuf)
