@@ -25,9 +25,9 @@ func (server *UDPServer) OnTraffic(c gnet.Conn) (action gnet.Action) {
 	copy(buffer, frame)
 
 	server.pool.Submit(func() {
-		out, _ := util.GenerateRandomBytes(buffer, len(buffer))
+		// out, _ := util.GenerateRandomBytes(buffer, len(buffer))
 		// time.Sleep(time.Millisecond)
-		c.AsyncWrite(out, nil)
+		c.AsyncWrite(buffer, nil)
 	})
 	return gnet.None
 }

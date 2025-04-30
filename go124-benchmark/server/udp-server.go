@@ -54,8 +54,8 @@ func (s *UDPServer) Serve() error {
 				data := make([]byte, n)
 				copy(data, buffer[:n])
 				s.pool.Submit(func() {
-					out, _ := util.GenerateRandomBytes(data, n)
-					_, err = s.Conn.WriteToUDP(out, addr)
+					// out, _ := util.GenerateRandomBytes(data, n)
+					_, err = s.Conn.WriteToUDP(data, addr)
 					if err != nil {
 						fmt.Printf("sendto error: %v\n", err)
 					}

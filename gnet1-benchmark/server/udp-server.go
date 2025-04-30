@@ -24,9 +24,9 @@ func (server *UDPServer) React(frame []byte, c gnet.Conn) (out []byte, action gn
 	copy(buffer, frame)
 
 	server.pool.Submit(func() {
-		out, _ = util.GenerateRandomBytes(buffer, len(buffer))
+		// out, _ = util.GenerateRandomBytes(buffer, len(buffer))
 		// time.Sleep(time.Millisecond)
-		c.SendTo(out)
+		c.SendTo(buffer)
 	})
 	return nil, gnet.None
 }
