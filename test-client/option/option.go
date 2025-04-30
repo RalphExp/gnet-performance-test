@@ -5,7 +5,7 @@ import "time"
 type Option func(opts *Options)
 
 type Options struct {
-	Concurrency  int
+	Threads      int
 	PacketSize   int
 	ReadTimeout  time.Duration // Timeout for sending packets
 	WriteTimeout time.Duration // Timeout for receiving packets
@@ -13,9 +13,9 @@ type Options struct {
 	Debug        bool
 }
 
-func WithConcurrency(concurrency int) Option {
+func WithThreads(threads int) Option {
 	return func(opts *Options) {
-		opts.Concurrency = concurrency
+		opts.Threads = threads
 	}
 }
 

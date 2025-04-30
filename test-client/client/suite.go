@@ -55,7 +55,7 @@ func loadOptions(options ...option.Option) *option.Options {
 func generateRandomBytes(length int, buffer []byte) {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	charsetLen := len(charset)
-	for i := range length {
+	for i := 0; i < length; i++ {
 		buffer[i] = charset[rand.Intn(charsetLen)]
 	}
 }
@@ -69,19 +69,19 @@ func NewUDPTestSuite(protoAddr string, options ...option.Option) *UDPTestSuite {
 
 func (suite *UDPTestSuite) Start() {
 	// Placeholder for the UDP client logic
-	fmt.Printf("UDP Client is running, starting %d connections...\n", suite.options.Concurrency)
+	fmt.Printf("UDP Client is running, starting %d connections...\n", suite.options.Threads)
 
 	if suite.options.Duration == 0 {
 		suite.options.Duration = 24 * time.Hour
 	}
 
 	var wg sync.WaitGroup
-	errChan := make(chan error, suite.options.Concurrency)
+	errChan := make(chan error, suite.options.Threads)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	startTime := time.Now()
 
-	for i := range suite.options.Concurrency {
+	for i := 0; i < suite.options.Threads; i++ {
 		func(idx int) {
 			conn, err := net.Dial("udp", fmt.Sprintf("%s:%d", suite.host, suite.port))
 			if err != nil {
@@ -98,32 +98,40 @@ func (suite *UDPTestSuite) Start() {
 				for {
 					select {
 					case <-ctx.Done():
-						return
-						// c := time.After(time.Second * 3)
-						// for {
-						// 	select {
-						// 	case <-c:
-						// 		conn.Close()
-						// 		return
-						// 	default:
-						// 		conn.SetReadDeadline(time.Now().Add(suite.options.ReadTimeout))
-						// 		_, err := conn.Read(rbuf)
-						// 		if err == nil {
-						// 			// fmt.Printf("Goroutine[%d] recv %s\n", idx, string(rbuf))
-						// 			suite.rx.Add(1)
-						// 		} else if !strings.Contains(err.Error(), "i/o timeout") {
-						// 			suite.rxError.Add(1)
-						// 			if suite.options.Debug {
-						// 				fmt.Printf("Goroutine[%d] recv error: %s\n", idx, err.Error())
-						// 			}
-						// 		}
-						// 	}
-						// }
+						delay := time.After(2 * time.Second)
+						for {
+							select {
+							case <-delay:
+								conn.Close()
+								return
+							default:
+								conn.SetReadDeadline(time.Now().Add(suite.options.ReadTimeout))
+								n, err := conn.Read(rbuf)
+								if err == nil {
+									if n != suite.options.PacketSize {
+										// check packet size
+										suite.rxError.Add(1)
+									} else {
+										suite.rx.Add(1)
+									}
+								} else if !strings.Contains(err.Error(), "i/o timeout") {
+									suite.rxError.Add(1)
+									if suite.options.Debug {
+										fmt.Printf("Goroutine[%d] recv error: %s\n", idx, err.Error())
+									}
+								}
+							}
+						}
 					default:
 						conn.SetReadDeadline(time.Now().Add(suite.options.ReadTimeout))
-						_, err := conn.Read(rbuf)
+						n, err := conn.Read(rbuf)
 						if err == nil {
-							suite.rx.Add(1)
+							if n != suite.options.PacketSize {
+								// check packet size
+								suite.rxError.Add(1)
+							} else {
+								suite.rx.Add(1)
+							}
 						} else if !strings.Contains(err.Error(), "i/o timeout") {
 							suite.rxError.Add(1)
 							if suite.options.Debug {
