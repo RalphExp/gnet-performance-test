@@ -3,13 +3,13 @@ package client
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"net"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"test-client/option"
+	"test-util/util"
 	"time"
 )
 
@@ -52,19 +52,17 @@ func loadOptions(options ...option.Option) *option.Options {
 	return opts
 }
 
-func generateRandomBytes(length int, buffer []byte) {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	charsetLen := len(charset)
-	for i := 0; i < length; i++ {
-		buffer[i] = charset[rand.Intn(charsetLen)]
-	}
-}
-
 func NewUDPTestSuite(protoAddr string, options ...option.Option) *UDPTestSuite {
 	client := &UDPTestSuite{}
 	client.host, client.port = parseProtoAddr(protoAddr)
 	client.options = loadOptions(options...)
 	return client
+}
+
+func (suite *UDPTestSuite) printError(prefix string, err error) {
+	if suite.options.Debug {
+		fmt.Printf("%s: %v\n", prefix, err)
+	}
 }
 
 func (suite *UDPTestSuite) Start() {
@@ -98,7 +96,7 @@ func (suite *UDPTestSuite) Start() {
 				for {
 					select {
 					case <-ctx.Done():
-						delay := time.After(2 * time.Second)
+						delay := time.After(time.Second)
 						for {
 							select {
 							case <-delay:
@@ -116,9 +114,7 @@ func (suite *UDPTestSuite) Start() {
 									}
 								} else if !strings.Contains(err.Error(), "i/o timeout") {
 									suite.rxError.Add(1)
-									if suite.options.Debug {
-										fmt.Printf("Goroutine[%d] recv error: %s\n", idx, err.Error())
-									}
+									suite.printError("Read Buffer", err)
 								}
 							}
 						}
@@ -134,9 +130,7 @@ func (suite *UDPTestSuite) Start() {
 							}
 						} else if !strings.Contains(err.Error(), "i/o timeout") {
 							suite.rxError.Add(1)
-							if suite.options.Debug {
-								fmt.Printf("Goroutine[%d] recv error: %s\n", idx, err.Error())
-							}
+							suite.printError("Read Buffer", err)
 						}
 					}
 				}
@@ -146,12 +140,12 @@ func (suite *UDPTestSuite) Start() {
 			go func() {
 				defer wg.Done()
 				wbuf := make([]byte, suite.options.PacketSize)
+				util.GenerateRandomBytes(wbuf, suite.options.PacketSize)
 				for {
 					select {
 					case <-ctx.Done():
 						return
 					default:
-						generateRandomBytes(suite.options.PacketSize, wbuf)
 						// if suite.options.Debug {
 						// 	fmt.Printf("Goroutine[%d] sent buffer: %s\n", idx, string(wbuf))
 						// }
@@ -161,9 +155,7 @@ func (suite *UDPTestSuite) Start() {
 							time.Sleep(time.Millisecond)
 						} else {
 							suite.txError.Add(1)
-							if suite.options.Debug {
-								fmt.Printf("Goroutine[%d] send error: %s\n", idx, err.Error())
-							}
+							suite.printError("Send Error", err)
 						}
 					}
 				}
@@ -181,10 +173,13 @@ func (suite *UDPTestSuite) Start() {
 
 	wg.Wait()
 	endTime := time.Now()
-	fmt.Printf("UDP Client finished. Send: %d, Recv: %d, Send Error: %d, Recv Error: %d\n",
+	fmt.Println("===================== [Statistics] =======================")
+	fmt.Printf("UDP Send: %d, Recv: %d, Send Error: %d, Recv Error: %d\n",
 		suite.tx.Load(), suite.rx.Load(), suite.txError.Load(), suite.rxError.Load())
 	fmt.Printf("Duration: %s\n", endTime.Sub(startTime))
 	fmt.Printf("Throughput: %f packets/sec\n", float64(suite.tx.Load())/endTime.Sub(startTime).Seconds())
 	fmt.Printf("Latency: %f ms\n", float64(endTime.Sub(startTime).Milliseconds())/float64(suite.tx.Load()))
-	fmt.Printf("Packet Loss: %f%%\n", float64(suite.tx.Load()-suite.rx.Load())/float64(suite.tx.Load())*100)
+	fmt.Printf("Packet Loss total: %d\n", suite.tx.Load()-suite.rx.Load())
+	fmt.Printf("Packet Loss percentage: %f%%\n", float64(suite.tx.Load()-suite.rx.Load())/float64(suite.tx.Load())*100)
+	fmt.Println("======================== [End] ===========================")
 }

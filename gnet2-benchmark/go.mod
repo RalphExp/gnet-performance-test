@@ -2,7 +2,11 @@ module gnet2-benchmark
 
 go 1.24
 
-require github.com/panjf2000/gnet/v2 v2.4.0
+require (
+	github.com/panjf2000/ants/v2 v2.9.0
+	github.com/panjf2000/gnet/v2 v2.4.2
+	test-util v0.0.0
+)
 
 require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
@@ -13,3 +17,5 @@ require (
 	golang.org/x/sys v0.16.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 )
+
+replace test-util => ../test-util

@@ -9,10 +9,11 @@ import (
 )
 
 func main() {
-	address := flag.String("address", ":5000", "server listen address")
+	address := flag.String("bind", ":5000", "server listen address")
+	poolSize := flag.Int("pool-size", 1024*1024, "size of ant pool")
 	flag.Parse()
 
-	server := server.NewUDPServer()
+	server := server.NewUDPServer(*poolSize)
 
 	// Placeholder for the UDP server logic
 	println("UDP Server is running...")

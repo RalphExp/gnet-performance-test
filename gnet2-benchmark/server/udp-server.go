@@ -1,19 +1,33 @@
 package server
 
 import (
+	"github.com/panjf2000/ants/v2"
 	"github.com/panjf2000/gnet/v2"
+
+	"test-util/util"
 )
 
 type UDPServer struct {
 	gnet.BuiltinEventEngine
+	pool *ants.Pool
 }
 
-func NewUDPServer() *UDPServer {
-	return &UDPServer{}
+func NewUDPServer(poolSize int) *UDPServer {
+	return &UDPServer{
+		pool: util.CreateAntsPool(poolSize),
+	}
 }
 
-func (svr *UDPServer) OnTraffic(c gnet.Conn) (action gnet.Action) {
-	buf, _ := c.Next(-1)
-	_, _ = c.Write(buf)
+func (server *UDPServer) OnTraffic(c gnet.Conn) (action gnet.Action) {
+	frame, _ := c.Next(-1)
+
+	buffer := make([]byte, len(frame))
+	copy(buffer, frame)
+
+	server.pool.Submit(func() {
+		out, _ := util.GenerateRandomBytes(buffer, len(buffer))
+		// time.Sleep(time.Millisecond)
+		c.AsyncWrite(out, nil)
+	})
 	return gnet.None
 }

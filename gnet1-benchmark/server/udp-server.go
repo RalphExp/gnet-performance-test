@@ -2,20 +2,31 @@ package server
 
 import (
 	"github.com/panjf2000/gnet"
+	"github.com/panjf2000/gnet/pool/goroutine"
+
+	"test-util/util"
 )
 
 type UDPServer struct {
 	gnet.EventServer
+	pool *goroutine.Pool
 }
 
-func NewUDPServer() *UDPServer {
-	return &UDPServer{}
+func NewUDPServer(poolSize int) *UDPServer {
+	return &UDPServer{
+		pool: util.CreateAntsPool(poolSize),
+	}
 }
 
-// React fires when a connection sends the server data.
-// Call c.Read() or c.ReadN(n) within the parameter:c to read incoming data from client.
-// Parameter:out is the return value which is going to be sent back to the client.
-func (svr *UDPServer) React(frame []byte, c gnet.Conn) (out []byte, action gnet.Action) {
-	out = frame[:]
-	return out, gnet.None
+func (server *UDPServer) React(frame []byte, c gnet.Conn) (out []byte, action gnet.Action) {
+
+	buffer := make([]byte, len(frame))
+	copy(buffer, frame)
+
+	server.pool.Submit(func() {
+		out, _ = util.GenerateRandomBytes(buffer, len(buffer))
+		// time.Sleep(time.Millisecond)
+		c.SendTo(out)
+	})
+	return nil, gnet.None
 }
