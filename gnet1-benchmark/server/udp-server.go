@@ -1,6 +1,8 @@
 package server
 
 import (
+	"fmt"
+
 	"github.com/panjf2000/ants/v2"
 	"github.com/panjf2000/gnet"
 
@@ -20,13 +22,21 @@ func NewUDPServer(poolSize int) *UDPServer {
 
 func (server *UDPServer) React(frame []byte, c gnet.Conn) (out []byte, action gnet.Action) {
 
-	buffer := make([]byte, len(frame))
+	buffer := util.GetBuffer()
 	copy(buffer, frame)
 
-	server.pool.Submit(func() {
+	err := server.pool.Submit(func() {
 		// out, _ = util.GenerateRandomBytes(buffer, len(buffer))
 		// time.Sleep(time.Millisecond)
-		c.SendTo(buffer)
+		defer util.PutBuffer(buffer)
+
+		if err := c.SendTo(buffer); err != nil {
+			fmt.Printf("%v\n", err)
+		}
 	})
+
+	if err != nil {
+		fmt.Printf("submit error: %v\n", err)
+	}
 	return nil, gnet.None
 }

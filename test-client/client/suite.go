@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -108,6 +109,7 @@ func (suite *UDPTestSuite) Start() {
 								if err == nil {
 									if n != suite.options.PacketSize {
 										// check packet size
+										suite.printError("packsize: ", errors.New(""))
 										suite.rxError.Add(1)
 									} else {
 										suite.rx.Add(1)

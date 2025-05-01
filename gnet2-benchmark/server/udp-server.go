@@ -21,12 +21,11 @@ func NewUDPServer(poolSize int) *UDPServer {
 func (server *UDPServer) OnTraffic(c gnet.Conn) (action gnet.Action) {
 	frame, _ := c.Next(-1)
 
-	buffer := make([]byte, len(frame))
+	buffer := util.GetBuffer()
 	copy(buffer, frame)
 
 	server.pool.Submit(func() {
-		// out, _ := util.GenerateRandomBytes(buffer, len(buffer))
-		// time.Sleep(time.Millisecond)
+		defer util.PutBuffer(buffer)
 		c.AsyncWrite(buffer, nil)
 	})
 	return gnet.None

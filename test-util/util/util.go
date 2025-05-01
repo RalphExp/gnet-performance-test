@@ -2,6 +2,7 @@ package util
 
 import (
 	"math/rand"
+	"sync"
 	"time"
 
 	"github.com/panjf2000/ants/v2"
@@ -14,11 +15,25 @@ const (
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
+var bufPool = sync.Pool{
+	New: func() any {
+		return make([]byte, 1024)
+	},
+}
+
+func GetBuffer() []byte {
+	return bufPool.Get().([]byte)
+}
+
+func PutBuffer(b any) {
+	bufPool.Put(b)
+}
+
 func GenerateRandomBytes(_ []byte, size int) (out []byte, err error) {
 	out = make([]byte, size)
 
 	charsetLen := len(charset)
-	for i := 0; i < size; i++ {
+	for i := range size {
 		out[i] = charset[rand.Intn(charsetLen)]
 	}
 	return out, err
