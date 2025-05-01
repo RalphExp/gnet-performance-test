@@ -1,15 +1,15 @@
 package server
 
 import (
+	"github.com/panjf2000/ants/v2"
 	"github.com/panjf2000/gnet"
-	"github.com/panjf2000/gnet/pool/goroutine"
 
 	"test-util/util"
 )
 
 type UDPServer struct {
 	gnet.EventServer
-	pool *goroutine.Pool
+	pool *ants.Pool
 }
 
 func NewUDPServer(poolSize int) *UDPServer {
