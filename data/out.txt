@@ -1,0 +1,39 @@
+[gnetv1.4.4]
+
+./test-client -threads 80 -duration 100s 
+Server Address: localhost:5000
+Threads: 80
+Packet Size: 1024
+Read Timeout(ms): 100
+Write Timeout(ms): 100
+Duration (ms): 100000
+Debug Mode: false
+UDP Client is running, starting 80 connections...
+===================== [Statistics] =======================
+UDP Send: 5919489, Recv: 5915938, Send Error: 0, Recv Error: 0
+Duration: 1m41.124987759s
+Throughput: 58536.363081 packets/sec
+Latency: 0.017083 ms
+Packet Loss total: 3551
+Packet Loss percentage: 0.059988%
+======================== [End] ===========================
+
+
+[go1.24]
+./test-client -threads 80 -duration 100s
+Server Address: localhost:5000
+Threads: 80
+Packet Size: 1024
+Read Timeout(ms): 100
+Write Timeout(ms): 100
+Duration (ms): 100000
+Debug Mode: false
+UDP Client is running, starting 80 connections...
+===================== [Statistics] =======================
+UDP Send: 6730136, Recv: 6705263, Send Error: 0, Recv Error: 0
+Duration: 1m41.118452869s
+Throughput: 66556.951862 packets/sec
+Latency: 0.015025 ms
+Packet Loss total: 24873
+Packet Loss percentage: 0.369576%
+======================== [End] ===========================
