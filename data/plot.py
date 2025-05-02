@@ -22,7 +22,9 @@ def read_process_data(filename, samples):
         line = fd.readline()
         assert len(line) > 0
         fields = re.split(r'\s+', line)
-        if n[0] == 'CPU':
+        if fields[0] == 'Average:':
+            continue
+        elif n[0] == 'CPU':
             if cpu_count >= samples:
                 continue
             cpu_count += 1
@@ -49,7 +51,7 @@ if __name__ == "__main__":
     fig, axs = plt.subplots(1, 2, figsize=(10, 4))
     x = np.arange(0, l)
 
-    # for simplicity, we combine the two data sets into one
+    # for simplicity, combine the two data sets into one
     axs[0].plot(x, gnet_cpu, label='gnet cpu%', color='blue', marker='o')
     axs[0].plot(x, go124_cpu, label='go124 cpu%', color='orange', marker='x')
     axs[0].set_title('CPU Usage Comparison')
